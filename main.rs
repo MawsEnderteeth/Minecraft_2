@@ -4,8 +4,12 @@ enum Action {
     Walk,
     Sneak,
     Help,
-    Controls(String),
+    Bind,
     Other,
+}
+struct Controls {
+    walk: Vec<String>,
+    sneak: Vec<String>,
 }
 fn main() {
     let mut username = String::new();
@@ -15,7 +19,7 @@ fn main() {
         .expect("Failed to read line.");
     username = username.trim().to_string();
 
-    let splash = vec!["Hello, world!", "Made in [REDACTED]!", "Way better than the original!", "Perfomance enhanced!", "Written in Rust!", "Totally necessary and not stupid!", "`struct Stupid` is not stupid!", "Yes!", "Poggers!", "You'll never guess me!", "Contains unsigned integers!", "Look, mom! I made a sequel to one of the best selling games of all time!", "Villagers are replaced by funko pops!", "So much lava!", "Is this enough splash texts?", "I shouldn't spend so much time on splashes!", "Maws can't spell sash text!", "Has no multiplayer!", "$PLAYER IS YOU!", "Hello, $player!", "$player is a funny name!", "You, my dear $player, are playing a very good game!", "$player is pretty pog ngl!", "How are you today, $player?"].replace("$PLAYER", username.to_uppercase()).replace("$player", username);
+    let splash: Vec<String> = ["Hello, world!", "Made in [REDACTED]!", "Way better than the original!", "Perfomance enhanced!", "Written in Rust!", "Totally necessary and not stupid!", "`struct Stupid` was not stupid!", "Yes!", "Poggers!", "You'll never guess me!", "Contains unsigned integers!", "Look, mom! I made a sequel to one of the best selling games of all time!", "Villagers are replaced by funko pops!", "So much lava!", "Is this enough splash texts?", "I shouldn't spend so much time on splashes!", "Maws can't spell sash text!", "Has no multiplayer!", "$PLAYER IS YOU!", "Hello, $player!", "$player is a funny name!", "You, my dear $player, are playing a very good game!", "$player is pretty pog ngl!", "How are you today, $player?"].iter().map(|x| x.replace("$player", &username)).map(|x| x.replace("$PLAYER", &username.to_uppercase())).collect();
     let splash_index = rand::thread_rng().gen_range(0, splash.len());
 
     println!(r#" ____    ____   ___   ___   ___   ________    _______    ________        ___       ________   ___________       ______
@@ -27,9 +31,12 @@ fn main() {
 "#);
     println!("    {}", splash[splash_index]);
 
-    let mut walk = vec!["w", "a", "s", "d"];
+    let mut keybinds = Controls {
+        walk: vec!["w", "a", "s", "d"].iter().map(|x| x.to_string()).collect(),
+        sneak: vec!["W", "A", "S", "D"].iter().map(|x| x.to_string()).collect(),
+    };
 
-    let sounds = vec!["< Zombie grunts", "Zombie grunts", "Zombie grunts >", "< Lava pops", "Lava pops", "Lava pops >", "< Orange Juice pops", "Orange Juice pops", "Orange Juice pops >", "< Tomato Sauce pops", "Tomato Sauce pops", "Tomato Sauce pops >", "< Cheese pops", "Cheese pops", "Cheese pops >", "< Funko Pop mumbles", "Funko Pop mumbles", "Funko Pop mumbles >", "< Minecart rolls", "Minecart rolls", "Minecart rolls >", "< Bat takes off", "Bat takes off", "Bat takes off >", "< Water flows", "Water flows", "Water flows >", "< Portal whooshes", "Portal whooshes", "Portal whooshes >"];
+    let ow_sounds = vec!["< Zombie grunts", "Zombie grunts", "Zombie grunts >", "< Lava pops", "Lava pops", "Lava pops >", "< Orange Juice pops", "Orange Juice pops", "Orange Juice pops >", "< Tomato Sauce pops", "Tomato Sauce pops", "Tomato Sauce pops >", "< Cheese pops", "Cheese pops", "Cheese pops >", "< Funko Pop mumbles", "Funko Pop mumbles", "Funko Pop mumbles >", "< Minecart rolls", "Minecart rolls", "Minecart rolls >", "< Bat takes off", "Bat takes off", "Bat takes off >", "< Water flows", "Water flows", "Water flows >", "< Portal whooshes", "Portal whooshes", "Portal whooshes >"];
     let mut steps = 0;
     let mut nether_prox = 10;
     loop {
@@ -37,16 +44,16 @@ fn main() {
         io::stdin()
             .read_line(&mut input)
             .expect("Failed to read line.");
-        let sounds_index = rand::thread_rng().gen_range(0, sounds.len());
+        let ow_sounds_index = rand::thread_rng().gen_range(0, ow_sounds.len());
 
-        match parse_action(&input, &walk) {
+        match parse_action(&input, &keybinds) {
             Action::Walk => {
                 println!("   Footsteps");
                 steps += 2;
                 if is_deadly(&username, 4) {
                 break;
                 }
-                if sounds_index <= 29 && sounds_index >= 27 && nether_prox > 0 {
+                if ow_sounds_index <= 29 && ow_sounds_index >= 27 && nether_prox > 0 {
                     nether_prox -= 2;
                 }
                 advance(steps);
@@ -56,24 +63,22 @@ fn main() {
                 if is_deadly(&username, 8) {
                     break;
                 }
-                if sounds_index <= 29 && sounds_index >= 27 && nether_prox > 0 {
+                if ow_sounds_index <= 29 && ow_sounds_index >= 27 && nether_prox > 0 {
                     nether_prox -= 1;
                 }
                 advance(steps);
             },
-            Action::Help => {
-                println!(r#"Help:
-    To walk, enter {}
-    To sneak, enter {}
-    To see this help text, enter `H`
-    To change the movement controls, enter `C` followed by 4 letters you wish to assign (note: the letters must be upper or lower case)
-    Hint: sneaking increases your chances of survival!"#, walk, walk.to_uppercase());
+            Action::Help => help(&keybinds),
+            Action::Bind => {
+                let x = bind_keys();
+                if let Ok(new) = x {
+                    keybinds = new;
+                } else if let Err(error) = x {
+                    println!("Error: {}", error);
+                    action_error();
+                }
             },
-            Action::Controls(new) => {
-                walk = vec![new[0], new[1], new[2], new[3]];
-                println!("Your controls have been changed to {}", walk);
-            }
-            Action::Other => {println!("Could not parse action. Enter `H` for list of possible actions.");},
+            Action::Other => action_error(),
         }
 
         if nether_prox == 0 {
@@ -81,7 +86,7 @@ fn main() {
             println!("   Ghast cries");
             break;
         }
-        println!("   {}", sounds[sounds_index]);
+        println!("   {}", ow_sounds[ow_sounds_index]);
     }
 
     let nether_sounds = vec!["< Zombified Piglin grunts", "Zombified Piglin grunts", "Zombified Piglin grunts >", "< Lava pops", "Lava pops", "Lava pops >", "< Orange Juice pops", "Orange Juice pops", "Orange Juice pops >", "< Tomato Sauce pops", "Tomato Sauce pops", "Tomato Sauce pops >", "< Cheese pops", "Cheese pops", "Cheese pops >", "< Strider chirps ", "Strider chirps ", "Strider chirps >", "< Piglin snorts", "Piglin snorts", "Piglin snorts >", "< Magma Cube squishes", "Magma Cube squishes", "Magma Cube squishes >", "< Hoglin growls", "Hoglin growls", "Hoglin growls >", "< Portal whooshes", "Portal whooshes", "Portal whooshes >"];
@@ -93,11 +98,12 @@ fn main() {
         io::stdin()
             .read_line(&mut input)
             .expect("Failed to read line.");
-            let sounds_index = rand::thread_rng().gen_range(0, nether_sounds.len());
+        let nether_sounds_index = rand::thread_rng().gen_range(0, nether_sounds.len());
 
-        match parse_action(&input, &walk) {
+        match parse_action(&input, &keybinds) {
             Action::Walk => {
-                println!("   Footsteps");
+                walking();
+                
                 nether_steps += 2;
             health -= 1;
             if health > 0 {
@@ -110,34 +116,34 @@ fn main() {
                 if is_deadly(&username, 4) {
                 break;
                 }
-                if sounds_index <= 29 && sounds_index >= 27 && nether_prox > 0 {
+                if nether_sounds_index <= 29 && nether_sounds_index >= 27 && nether_prox > 0 {
                     overworld_prox -= 2;
                 }
                 advance_nether(nether_steps);
             }
             Action::Sneak => {
+                sneaking();
+
                 nether_steps += 1;
                 if is_deadly(&username, 4) {
                     break;
                 }
-                if sounds_index <= 29 && sounds_index >= 27 && nether_prox > 0 {
+                if nether_sounds_index <= 29 && nether_sounds_index >= 27 && nether_prox > 0 {
                     overworld_prox -= 1;
                 }
                 advance_nether(nether_steps);
             },
-            Action::Help => {
-                println!(r#"Help:
-    To walk, enter {}
-    To sneak, enter {}
-    To see this help text, enter `H`
-    To change the movement controls, enter `C` followed by 4 letters you wish to assign (note: the letters must be upper or lower case)
-    Hint: sneaking increases your chances of survival!"#, walk, walk.to_uppercase());
+            Action::Help => help(&keybinds),
+            Action::Bind => {
+                let x = bind_keys();
+                if let Ok(new) = x {
+                    keybinds = new;
+                } else if let Err(error) = x {
+                    println!("Error: {}", error);
+                    action_error();
+                }
             },
-            Action::Controls(new) => {
-                walk = vec![new[0], new[1], new[2], new[3]];
-                println!("Your controls have been changed to {}", walk);
-            }
-            Action::Other => {println!("Could not parse action. Enter `H` for list of possible actions.");},
+            Action::Other => action_error(),
         }
         if overworld_prox == 0 {
             println!(r#"   Portal noise intensifies
@@ -156,7 +162,7 @@ Begin a new dream, a better dream. With graphics maybe.
  Special thanks to: ReveredOxygen, for their help, support, ideas, and most importantly prompt to make this game in one day."#, username, username);
             break;
         }
-        println!("   {}", nether_sounds[sounds_index]);
+        println!("   {}", nether_sounds[nether_sounds_index]);
     }
     let mut final_words = String::new();
     io::stdin()
@@ -164,28 +170,14 @@ Begin a new dream, a better dream. With graphics maybe.
         .expect("Failed to read line.");
 }
 
-fn parse_action(input: &str, controls: &Vec<String>) -> Action {
-    let bytes = input[1..].trim().to_lowercase().as_bytes();
-    match input.chars().next() {
-        'h' | 'H' => return Action::Help,
-        'c' | 'C' => {
-            if input[1..].trim().len() < 4 {
-                return Action::Other;
-            }
-            for byte in bytes[0..4].iter() {
-                if input.to_lowercase().chars().next().is_lowercase() && byte != b'h' && byte != b'c' {
-                    continue;
-                } else {
-                    return Action::Other;
-                }
-            }
-            let new = input[1..].trim().to_lowercase();
-            return Action::Controls(new[0..3])
-        },
+fn parse_action(input: &str, controls: &Controls) -> Action {
+    match input.trim() {
+        "h" | "H" => return Action::Help,
+        "c" | "C" => return Action::Bind,
         key => {
-            if controls.contains(key) {
+            if controls.walk.contains(&key.to_string()) {
                 return Action::Walk;
-            } else if controls.to_uppercase().contains(key) {
+            } else if controls.sneak.contains(&key.to_string()) {
                 return Action::Sneak;
             } else {
                 return Action::Other;
@@ -194,6 +186,50 @@ fn parse_action(input: &str, controls: &Vec<String>) -> Action {
     }
 }
 
+//functions directly related to Actions
+fn walking() {
+    println!("   Footsteps");
+}
+
+fn sneaking() {
+
+}
+
+fn bind_keys() -> Result<Controls, &'static str> {
+    println!("Please input the 4 letters you wish to assign (note: the letters must be upper or lower case)");
+    let mut rebind = String::new();
+    io::stdin().read_line(&mut rebind).expect("Failed to read line.");
+    rebind = rebind.trim().to_string();
+    let walk = rebind.to_lowercase();
+    let sneak = rebind.to_uppercase();
+    if rebind.len() != 4 {
+        return Err("Invalid length!");
+    } else if walk.chars().all(|x| x.is_lowercase()) == false {
+        return Err("One or more invalid characters!");
+    } else if walk.contains("c") || walk.contains("h") {
+        return Err("Cannot overwrite default controls, `C` and `H`!");
+    }
+    println!("Your controls have been changed to {}", walk);
+    Ok(Controls {
+        walk: walk.chars().map(|x| x.to_string()).collect(),
+        sneak: sneak.chars().map(|x| x.to_string()).collect()
+    })
+}
+
+fn help(controls: &Controls) {
+    println!(r#"Help:
+    To walk, enter "{}", "{}", "{}", or "{}"
+    To sneak, enter "{}", "{}", "{}", or "{}"
+    To see this help text, enter `H`
+    To change the movement controls, enter `C` followed by 4 letters you wish to assign (note: the letters must be upper or lower case)
+    Hint: sneaking increases your chances of survival!"#, controls.walk[0], controls.walk[1], controls.walk[2], controls.walk[3], controls.sneak[0], controls.sneak[1], controls.sneak[2], controls.sneak[3])
+}
+
+fn action_error() {
+    println!("Could not parse action. Enter `H` for list of possible actions.");
+}
+
+//functions called by several Actions
 fn is_deadly(player: &str, safety: usize) -> bool {
     let deaths = vec!["fell from a high place", "tried to swim in lava", "was slain by Zombie", "walked into a cactus whilst trying to escape Husk", "hit the ground too hard", "fell off a ladder", "was squashed by a falling anvil", "discovered the floor was lava"];
     let proceed = rand::thread_rng().gen_range(0, deaths.len() * safety);
