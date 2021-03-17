@@ -27,7 +27,7 @@ fn main() {
 |     \/     | |   | |    \|   | |   |___   /  /   \__| |  |__|   |    |  _  |    |   |___       |   |       |__/  \   |
 |            | |   | |         | |    ___| |  |     __  |        /    /  /_\  \   |    ___|      |   |            _/  /
 |   |\  /|   | |   | |   |\    | |   |____  \  \___/  | |   |\   \   |  _____  |  |   |          |   |        ___/   /_
-|___| \/ |___| |___| |___| \___| |________|  \_______/  |___| \___\ /__/     \__\ |___|          |___|       |_________| (beta)
+|___| \/ |___| |___| |___| \___| |________|  \_______/  |___| \___\ /__/     \__\ |___|          |___|       |_________| version 1.0
 "#);
     println!("    {}", splash[splash_index]);
 
@@ -38,7 +38,7 @@ fn main() {
 
     let ow_sounds = vec!["< Zombie grunts", "Zombie grunts", "Zombie grunts >", "< Lava pops", "Lava pops", "Lava pops >", "< Orange Juice pops", "Orange Juice pops", "Orange Juice pops >", "< Tomato Sauce pops", "Tomato Sauce pops", "Tomato Sauce pops >", "< Cheese pops", "Cheese pops", "Cheese pops >", "< Funko Pop mumbles", "Funko Pop mumbles", "Funko Pop mumbles >", "< Minecart rolls", "Minecart rolls", "Minecart rolls >", "< Bat takes off", "Bat takes off", "Bat takes off >", "< Water flows", "Water flows", "Water flows >", "< Portal whooshes", "Portal whooshes", "Portal whooshes >"];
     let mut steps = 0;
-    let mut nether_prox = 10;
+    let mut nether_prox = 20;
     loop {
         let mut input = String::new();
         io::stdin()
@@ -91,7 +91,7 @@ fn main() {
 
     let nether_sounds = vec!["< Zombified Piglin grunts", "Zombified Piglin grunts", "Zombified Piglin grunts >", "< Lava pops", "Lava pops", "Lava pops >", "< Orange Juice pops", "Orange Juice pops", "Orange Juice pops >", "< Tomato Sauce pops", "Tomato Sauce pops", "Tomato Sauce pops >", "< Cheese pops", "Cheese pops", "Cheese pops >", "< Strider chirps ", "Strider chirps ", "Strider chirps >", "< Piglin snorts", "Piglin snorts", "Piglin snorts >", "< Magma Cube squishes", "Magma Cube squishes", "Magma Cube squishes >", "< Hoglin growls", "Hoglin growls", "Hoglin growls >", "< Portal whooshes", "Portal whooshes", "Portal whooshes >"];
     let mut nether_steps = 0;
-    let mut overworld_prox = 6;
+    let mut overworld_prox = 20;
     let mut health = 10;
     while nether_prox == 0 {
         let mut input = String::new();
